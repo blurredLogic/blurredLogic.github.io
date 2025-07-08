@@ -4,51 +4,153 @@
   <meta charset="UTF-8"/>
   <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js"></script>
   <script>
-    // Replace with your full anon key (ASCII only)
-    const API_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3bXRicGZreWx4dnl2c2RlcHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NjE0MTQsImV4cCI6MjA2NDUzNzQxNH0.pmpGh4dWJNGZ23BLOQ7fVeyZ-10o9QW2SMuGYBbWrEU";
-    const BASE_URL = "https://bwmtbpfkylxvyvsdepvl.supabase.co/rest/v1/oecd_data";
+    // === CONFIGURE THESE ===
+    const ANON_KEY    = "YOUR_ANON_KEY";
+    const PROJECT_URL = "https://YOUR_PROJECT_URL.supabase.co";
+    const BASE_URL    = `${PROJECT_URL}/rest/v1`;
 
     const connector = tableau.makeConnector();
 
-    // 1) Define the schema with safe IDs
-    connector.getSchema = function(schemaCallback) {
-      const cols = [
-        { id: "quarter",               alias: "Quarter",                         dataType: tableau.dataTypeEnum.string },
-        { id: "unit_mult",             alias: "UNIT_MULT",                       dataType: tableau.dataTypeEnum.float  },
-        { id: "decimals_num",          alias: "DECIMALS",                        dataType: tableau.dataTypeEnum.float  },
-        { id: "id",                    alias: "ID",                               dataType: tableau.dataTypeEnum.int    },
-        { id: "structure_name",        alias: "STRUCTURE_NAME",                  dataType: tableau.dataTypeEnum.string },
-        { id: "ref_area",              alias: "REF_AREA",                        dataType: tableau.dataTypeEnum.string },
-        { id: "reference_area",        alias: "Reference area",                  dataType: tableau.dataTypeEnum.string },
-        { id: "freq_obs",              alias: "Frequency of observation",        dataType: tableau.dataTypeEnum.string },
-        { id: "measure_code",          alias: "MEASURE",                         dataType: tableau.dataTypeEnum.string },
-        { id: "measure_desc",          alias: "Measure",                         dataType: tableau.dataTypeEnum.string },
-        { id: "adjustment_code",       alias: "ADJUSTMENT",                      dataType: tableau.dataTypeEnum.string },
-        { id: "adjustment_desc",       alias: "Adjustment",                      dataType: tableau.dataTypeEnum.string },
-        { id: "transformation_code",   alias: "TRANSFORMATION",                  dataType: tableau.dataTypeEnum.string },
-        { id: "transformation_desc",   alias: "Transformation",                  dataType: tableau.dataTypeEnum.string },
-        { id: "calc_methodology",      alias: "Calculation methodology",         dataType: tableau.dataTypeEnum.string },
-        { id: "time_period",           alias: "TIME_PERIOD",                     dataType: tableau.dataTypeEnum.date   },
-        { id: "obs_value",             alias: "OBS_VALUE",                       dataType: tableau.dataTypeEnum.string },
-        { id: "obs_status",            alias: "OBS_STATUS",                      dataType: tableau.dataTypeEnum.string },
-        { id: "observation_status",    alias: "Observation status",              dataType: tableau.dataTypeEnum.string },
-        { id: "unit_multiplier_text",  alias: "Unit multiplier text",            dataType: tableau.dataTypeEnum.string },
-        { id: "decimals_text",         alias: "Decimals text",                   dataType: tableau.dataTypeEnum.string }
-      ];
+    // 1) Define schema per table
+    connector.getSchema = schemaCallback => {
+      const tbl = tableau.connectionData;
+      if (!tbl) {
+        tableau.abortWithError("No table selected. Click one of the buttons below.");
+        return;
+      }
 
-      schemaCallback([{
-        id:      "oecd_data",
-        alias:   "OECD Data (Full)",
-        columns: cols
-      }]);
+      let cols = [], tableSchema;
+      switch(tbl) {
+        case "composite_scores":
+          cols = [
+            { id: "id",         alias: "id",          dataType: tableau.dataTypeEnum.int      },
+            { id: "created_at", alias: "created_at",  dataType: tableau.dataTypeEnum.datetime }
+          ];
+          break;
+
+        case "country_region_IBAN":
+          cols = [
+            { id: "sub_region_code",       alias: "sub_region_code",       dataType: tableau.dataTypeEnum.int    },
+            { id: "sub_region_name",       alias: "sub_region_name",       dataType: tableau.dataTypeEnum.string },
+            { id: "numeric",               alias: "numeric",               dataType: tableau.dataTypeEnum.int    },
+            { id: "iso_alpha2",            alias: "iso_alpha2",            dataType: tableau.dataTypeEnum.string },
+            { id: "iso_alpha3",            alias: "iso_alpha3",            dataType: tableau.dataTypeEnum.string },
+            { id: "ge_healthcare_region",  alias: "ge_healthcare_region",  dataType: tableau.dataTypeEnum.string },
+            { id: "region_name",           alias: "region_name",           dataType: tableau.dataTypeEnum.string },
+            { id: "country",               alias: "country",               dataType: tableau.dataTypeEnum.string },
+            { id: "region_code",           alias: "region_code",           dataType: tableau.dataTypeEnum.int    }
+          ];
+          break;
+
+        case "country_risk_ratings":
+          cols = [
+            { id: "country_code",    alias: "country_code",    dataType: tableau.dataTypeEnum.string },
+            { id: "country",         alias: "country",         dataType: tableau.dataTypeEnum.string },
+            { id: "country_grade",   alias: "country_grade",   dataType: tableau.dataTypeEnum.string },
+            { id: "short_term_risk", alias: "short_term_risk", dataType: tableau.dataTypeEnum.string }
+          ];
+          break;
+
+        case "imf_weo_data_final":
+          cols = [
+            { id: "country_name",                  alias: "country_name",                  dataType: tableau.dataTypeEnum.string },
+            { id: "country_code",                  alias: "country_code",                  dataType: tableau.dataTypeEnum.string },
+            { id: "period",                        alias: "period",                        dataType: tableau.dataTypeEnum.string },
+            { id: "gdp_growth_pct",                alias: "gdp_growth_pct",                dataType: tableau.dataTypeEnum.float  },
+            { id: "nominal_gdp_usd_billions",      alias: "nominal_gdp_usd_billions",      dataType: tableau.dataTypeEnum.float  },
+            { id: "gdp_ppp_billions",              alias: "gdp_ppp_billions",              dataType: tableau.dataTypeEnum.float  },
+            { id: "inflation_avg_index",           alias: "inflation_avg_index",           dataType: tableau.dataTypeEnum.float  },
+            { id: "inflation_eop_index",           alias: "inflation_eop_index",           dataType: tableau.dataTypeEnum.float  },
+            { id: "govt_debt_nat_currency_billions",alias:"govt_debt_nat_currency_billions",dataType: tableau.dataTypeEnum.float  },
+            { id: "govt_revenue_pct_gdp",          alias: "govt_revenue_pct_gdp",          dataType: tableau.dataTypeEnum.float  },
+            { id: "govt_spending_pct_gdp",         alias: "govt_spending_pct_gdp",         dataType: tableau.dataTypeEnum.float  },
+            { id: "current_account_pct_gdp",       alias: "current_account_pct_gdp",       dataType: tableau.dataTypeEnum.float  },
+            { id: "unemployment_rate_pct",         alias: "unemployment_rate_pct",         dataType: tableau.dataTypeEnum.float  },
+            { id: "updated_at",                    alias: "updated_at",                    dataType: tableau.dataTypeEnum.datetime }
+          ];
+          break;
+
+        case "oecd_data":
+          cols = [
+            { id: "Quarter",                      alias: "Quarter",                       dataType: tableau.dataTypeEnum.string },
+            { id: "ID",                           alias: "ID",                            dataType: tableau.dataTypeEnum.int    },
+            { id: "Reference_area",               alias: "Reference_area",                dataType: tableau.dataTypeEnum.string },
+            { id: "Frequency_of_observation",     alias: "Frequency_of_observation",      dataType: tableau.dataTypeEnum.string },
+            { id: "UNIT_MULT",                    alias: "UNIT_MULT",                     dataType: tableau.dataTypeEnum.float  },
+            { id: "DECIMALS",                     alias: "DECIMALS",                      dataType: tableau.dataTypeEnum.float  },
+            { id: "Calculation_methodology",      alias: "Calculation_methodology",       dataType: tableau.dataTypeEnum.string },
+            { id: "Observation_status",           alias: "Observation_status",            dataType: tableau.dataTypeEnum.string },
+            { id: "Unit_multiplier",              alias: "Unit_multiplier",               dataType: tableau.dataTypeEnum.string },
+            { id: "STRUCTURE_NAME",               alias: "STRUCTURE_NAME",                dataType: tableau.dataTypeEnum.string },
+            { id: "REF_AREA",                     alias: "REF_AREA",                      dataType: tableau.dataTypeEnum.string },
+            { id: "MEASURE",                      alias: "MEASURE",                       dataType: tableau.dataTypeEnum.string },
+            { id: "Measure",                      alias: "Measure",                       dataType: tableau.dataTypeEnum.string },
+            { id: "ADJUSTMENT",                   alias: "ADJUSTMENT",                    dataType: tableau.dataTypeEnum.string },
+            { id: "Adjustment",                   alias: "Adjustment",                    dataType: tableau.dataTypeEnum.string },
+            { id: "TRANSFORMATION",               alias: "TRANSFORMATION",                dataType: tableau.dataTypeEnum.string },
+            { id: "Transformation",               alias: "Transformation",                dataType: tableau.dataTypeEnum.string },
+            { id: "TIME_PERIOD",                  alias: "TIME_PERIOD",                   dataType: tableau.dataTypeEnum.date   },
+            { id: "OBS_VALUE",                    alias: "OBS_VALUE",                     dataType: tableau.dataTypeEnum.string },
+            { id: "OBS_STATUS",                   alias: "OBS_STATUS",                    dataType: tableau.dataTypeEnum.string },
+            { id: "Decimals",                     alias: "Decimals",                      dataType: tableau.dataTypeEnum.string }
+          ];
+          break;
+
+        case "sovereign_ratings":
+          cols = [
+            { id: "country",        alias: "country",        dataType: tableau.dataTypeEnum.string },
+            { id: "moody_s",        alias: "moody_s",        dataType: tableau.dataTypeEnum.string },
+            { id: "s_and_p",        alias: "s_and_p",        dataType: tableau.dataTypeEnum.string },
+            { id: "fitch",          alias: "fitch",          dataType: tableau.dataTypeEnum.string },
+            { id: "url",            alias: "url",            dataType: tableau.dataTypeEnum.string },
+            { id: "lt_fc_date",     alias: "lt_fc_date",     dataType: tableau.dataTypeEnum.string },
+            { id: "lt_fc_rating_outlook", alias:"lt_fc_rating_outlook", dataType: tableau.dataTypeEnum.string },
+            { id: "lt_lc_date",     alias: "lt_lc_date",     dataType: tableau.dataTypeEnum.string },
+            { id: "lt_lc_rating",   alias: "lt_lc_rating",   dataType: tableau.dataTypeEnum.string },
+            { id: "st_fc_date",     alias: "st_fc_date",     dataType: tableau.dataTypeEnum.string },
+            { id: "st_fc_rating",   alias: "st_fc_rating",   dataType: tableau.dataTypeEnum.string },
+            { id: "st_lc_date",     alias: "st_lc_date",     dataType: tableau.dataTypeEnum.string },
+            { id: "st_lc_rating",   alias: "st_lc_rating",   dataType: tableau.dataTypeEnum.string },
+            { id: "agency",         alias: "agency",         dataType: tableau.dataTypeEnum.string },
+            { id: "ID",             alias: "ID",             dataType: tableau.dataTypeEnum.int    },
+            { id: "Alpha3",         alias: "Alpha3",         dataType: tableau.dataTypeEnum.string }
+          ];
+          break;
+
+        case "world_bank_governance_indicators":
+          cols = [
+            { id: "code",        alias: "code",        dataType: tableau.dataTypeEnum.string },
+            { id: "countryname", alias: "countryname", dataType: tableau.dataTypeEnum.string },
+            { id: "year",        alias: "year",        dataType: tableau.dataTypeEnum.int    },
+            { id: "indicator",   alias: "indicator",   dataType: tableau.dataTypeEnum.string },
+            { id: "estimate",    alias: "estimate",    dataType: tableau.dataTypeEnum.float  },
+            { id: "stddev",      alias: "stddev",      dataType: tableau.dataTypeEnum.float  },
+            { id: "nsource",     alias: "nsource",     dataType: tableau.dataTypeEnum.int    },
+            { id: "pctrank",     alias: "pctrank",     dataType: tableau.dataTypeEnum.float  },
+            { id: "pctranklower",alias: "pctranklower",dataType: tableau.dataTypeEnum.float  },
+            { id: "pctrankupper",alias: "pctrankupper",dataType: tableau.dataTypeEnum.float  },
+            { id: "codeindyr",   alias: "codeindyr",   dataType: tableau.dataTypeEnum.string }
+          ];
+          break;
+
+        default:
+          tableau.abortWithError("Unknown table: " + tbl);
+          return;
+      }
+
+      tableSchema = { id: tbl, alias: tbl, columns: cols };
+      schemaCallback([tableSchema]);
     };
 
-    // 2) Fetch the full table then map into those safe IDs
-    connector.getData = function(table, doneCallback) {
-      fetch(BASE_URL, {
+    // 2) Fetch & map all columns
+    connector.getData = (table, doneCallback) => {
+      const tbl = tableau.connectionData;
+      const url = `${BASE_URL}/${tbl}?select=*`;
+
+      fetch(url, {
         headers: {
-          "apikey":        API_KEY,
-          "Authorization": `Bearer ${API_KEY}`,
+          "apikey":        ANON_KEY,
+          "Authorization": `Bearer ${ANON_KEY}`,
           "Content-Type":  "application/json"
         }
       })
@@ -57,29 +159,16 @@
         return res.json();
       })
       .then(data => {
-        const rows = data.map(r => ({
-          quarter:              r.Quarter,
-          unit_mult:            r.UNIT_MULT,
-          decimals_num:         r.DECIMALS,
-          id:                   r.ID,
-          structure_name:       r.STRUCTURE_NAME,
-          ref_area:             r.REF_AREA,
-          reference_area:       r["Reference area"],
-          freq_obs:             r["Frequency of observation"],
-          measure_code:         r.MEASURE,
-          measure_desc:         r["Measure"],
-          adjustment_code:      r.ADJUSTMENT,
-          adjustment_desc:      r["Adjustment"],
-          transformation_code:  r.TRANSFORMATION,
-          transformation_desc:  r["Transformation"],
-          calc_methodology:     r["Calculation methodology"],
-          time_period:          r.TIME_PERIOD,
-          obs_value:            r.OBS_VALUE,
-          obs_status:           r.OBS_STATUS,
-          observation_status:   r["Observation status"],
-          unit_multiplier_text: r["Unit multiplier text"],
-          decimals_text:        r["Decimals text"]
-        }));
+        // map each row into same‐named keys
+        const rows = data.map(r => {
+          // shallow clone only the declared columns
+          const out = {};
+          for (const col of table.tableInfo.columns) {
+            const id = col.id;
+            out[id] = r[id];
+          }
+          return out;
+        });
 
         table.appendRows(rows);
         doneCallback();
@@ -89,16 +178,23 @@
 
     tableau.registerConnector(connector);
 
-    function connect() {
-      tableau.connectionName = "OECD Data (Full)";
+    // call when a button is clicked
+    function launch(tbl) {
+      tableau.connectionData = tbl;
+      tableau.connectionName = tbl;
       tableau.submit();
     }
   </script>
 </head>
 <body>
-  <h2>Supabase → Tableau WDC: OECD Data</h2>
-  <p>Click below to fetch the full <code>oecd_data</code> table:</p>
-  <button onclick="connect()">Connect & Extract OECD Data</button>
+  <h2>Supabase → Tableau: Extract Any Table</h2>
+  <p>Click the button for the table you want to pull:</p>
+  <button onclick="launch('composite_scores')">composite_scores</button>
+  <button onclick="launch('country_region_IBAN')">country_region_IBAN</button>
+  <button onclick="launch('country_risk_ratings')">country_risk_ratings</button>
+  <button onclick="launch('imf_weo_data_final')">imf_weo_data_final</button>
+  <button onclick="launch('oecd_data')">oecd_data</button>
+  <button onclick="launch('sovereign_ratings')">sovereign_ratings</button>
+  <button onclick="launch('world_bank_governance_indicators')">world_bank_governance_indicators</button>
 </body>
 </html>
-`
