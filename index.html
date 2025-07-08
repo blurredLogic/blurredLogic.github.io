@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js"></script>
+  <script>
+    // Replace with your full anon key (ASCII only)
+    const API_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3bXRicGZreWx4dnl2c2RlcHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NjE0MTQsImV4cCI6MjA2NDUzNzQxNH0.pmpGh4dWJNGZ23BLOQ7fVeyZ-10o9QW2SMuGYBbWrEU";
+    const BASE_URL = "https://bwmtbpfkylxvyvsdepvl.supabase.co/rest/v1/oecd_data";
+
+    const connector = tableau.makeConnector();
+
+    // 1) Define the schema with safe IDs
+    connector.getSchema = function(schemaCallback) {
+      const cols = [
+        { id: "quarter",               alias: "Quarter",                         dataType: tableau.dataTypeEnum.string },
+        { id: "unit_mult",             alias: "UNIT_MULT",                       dataType: tableau.dataTypeEnum.float  },
+        { id: "decimals_num",          alias: "DECIMALS",                        dataType: tableau.dataTypeEnum.float  },
+        { id: "id",                    alias: "ID",                               dataType: tableau.dataTypeEnum.int    },
+        { id: "structure_name",        alias: "STRUCTURE_NAME",                  dataType: tableau.dataTypeEnum.string },
+        { id: "ref_area",              alias: "REF_AREA",                        dataType: tableau.dataTypeEnum.string },
+        { id: "reference_area",        alias: "Reference area",                  dataType: tableau.dataTypeEnum.string },
+        { id: "freq_obs",              alias: "Frequency of observation",        dataType: tableau.dataTypeEnum.string },
+        { id: "measure_code",          alias: "MEASURE",                         dataType: tableau.dataTypeEnum.string },
+        { id: "measure_desc",          alias: "Measure",                         dataType: tableau.dataTypeEnum.string },
+        { id: "adjustment_code",       alias: "ADJUSTMENT",                      dataType: tableau.dataTypeEnum.string },
+        { id: "adjustment_desc",       alias: "Adjustment",                      dataType: tableau.dataTypeEnum.string },
+        { id: "transformation_code",   alias: "TRANSFORMATION",                  dataType: tableau.dataTypeEnum.string },
+        { id: "transformation_desc",   alias: "Transformation",                  dataType: tableau.dataTypeEnum.string },
+        { id: "calc_methodology",      alias: "Calculation methodology",         dataType: tableau.dataTypeEnum.string },
+        { id: "time_period",           alias: "TIME_PERIOD",                     dataType: tableau.dataTypeEnum.date   },
+        { id: "obs_value",             alias: "OBS_VALUE",                       dataType: tableau.dataTypeEnum.string },
+        { id: "obs_status",            alias: "OBS_STATUS",                      dataType: tableau.dataTypeEnum.string },
+        { id: "observation_status",    alias: "Observation status",              dataType: tableau.dataTypeEnum.string },
+        { id: "unit_multiplier_text",  alias: "Unit multiplier text",            dataType: tableau.dataTypeEnum.string },
+        { id: "decimals_text",         alias: "Decimals text",                   dataType: tableau.dataTypeEnum.string }
+      ];
+
+      schemaCallback([{
+        id:      "oecd_data",
+        alias:   "OECD Data (Full)",
+        columns: cols
+      }]);
+    };
+
+    // 2) Fetch the full table then map into those safe IDs
+    connector.getData = function(table, doneCallback) {
+      fetch(BASE_URL, {
+        headers: {
+          "apikey":        API_KEY,
+          "Authorization": `Bearer ${API_KEY}`,
+          "Content-Type":  "application/json"
+        }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        const rows = data.map(r => ({
+          quarter:              r.Quarter,
+          unit_mult:            r.UNIT_MULT,
+          decimals_num:         r.DECIMALS,
+          id:                   r.ID,
+          structure_name:       r.STRUCTURE_NAME,
+          ref_area:             r.REF_AREA,
+          reference_area:       r["Reference area"],
+          freq_obs:             r["Frequency of observation"],
+          measure_code:         r.MEASURE,
+          measure_desc:         r["Measure"],
+          adjustment_code:      r.ADJUSTMENT,
+          adjustment_desc:      r["Adjustment"],
+          transformation_code:  r.TRANSFORMATION,
+          transformation_desc:  r["Transformation"],
+          calc_methodology:     r["Calculation methodology"],
+          time_period:          r.TIME_PERIOD,
+          obs_value:            r.OBS_VALUE,
+          obs_status:           r.OBS_STATUS,
+          observation_status:   r["Observation status"],
+          unit_multiplier_text: r["Unit multiplier text"],
+          decimals_text:        r["Decimals text"]
+        }));
+
+        table.appendRows(rows);
+        doneCallback();
+      })
+      .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
+    };
+
+    tableau.registerConnector(connector);
+
+    function connect() {
+      tableau.connectionName = "OECD Data (Full)";
+      tableau.submit();
+    }
+  </script>
+</head>
+<body>
+  <h2>Supabase → Tableau WDC: OECD Data</h2>
+  <p>Click below to fetch the full <code>oecd_data</code> table:</p>
+  <button onclick="connect()">Connect & Extract OECD Data</button>
+</body>
+</html>
+`
