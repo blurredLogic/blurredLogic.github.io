@@ -3738,46 +3738,57 @@
     "Content-Type":  "application/json"
   };
 
-  const pageSize = 1000;            // Supabase will never return more than 1k per call
-  let allRows = [];                 
-  let offset  = 0;
+
+  const pageSize = 1000;  // Supabase max per response
+  let allRows   = [];
+  let start     = 0;
 
   function fetchPage() {
-    // request rows [offset … offset+pageSize)
-    const url = `${BASE_URL}/${tbl}?select=*&limit=${pageSize}&offset=${offset}`;
-    fetch(url, { headers })
-      .then(res => {
-        if (!res.ok) 
-          throw new Error(`Status ${res.status} on table ${tbl}`);
-        return res.json();
-      })
-      .then(data => {
-        allRows = allRows.concat(data);
+    const end        = start + pageSize - 1;
+    const pageHeaders = {
+      ...headers,
+      "Range-Unit": "rows",
+      "Range":       `${start}-${end}`
+    };
 
-        if (data.length === pageSize) {
-          // more pages to fetch
-          offset += pageSize;
-          fetchPage();
-        } else {
-          // no more data: map & append everything at once
-          const rows = allRows.map(r => {
-            const out = {};
-            for (const col of table.tableInfo.columns) {
-              out[col.id] = r[col.id];
-            }
-            return out;
-          });
-          table.appendRows(rows);
-          doneCallback();
+    fetch(baseUrl, { headers: pageHeaders })
+      .then(res => {
+        // 206 = Partial Content; 200 = all content if <= pageSize
+        if (!res.ok && res.status !== 206) {
+          throw new Error(`Status ${res.status}`);
         }
+        // Grab total count from Content-Range: "0-999/85000"
+        const contentRange = res.headers.get("Content-Range") || "";
+        const totalMatch   = contentRange.match(/\/(\d+)$/);
+        const total        = totalMatch ? parseInt(totalMatch[1], 10) : null;
+
+        return res.json().then(data => {
+          allRows = allRows.concat(data);
+
+          // If we know total and we've not yet fetched everything, fetch next page
+          if (total !== null && end + 1 < total) {
+            start += pageSize;
+            fetchPage();
+          } else {
+            // Done paging: map + append
+            const rows = allRows.map(r => {
+              const out = {};
+              for (const col of table.tableInfo.columns) {
+                out[col.id] = r[col.id];
+              }
+              return out;
+            });
+            table.appendRows(rows);
+            doneCallback();
+          }
+        });
       })
       .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
   }
 
-  // kick off the first page
+  // Kick off paging
   fetchPage();
 };
-
 
   // 3) register
   tableau.registerConnector(connector);
