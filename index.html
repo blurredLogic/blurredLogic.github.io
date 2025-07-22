@@ -3738,42 +3738,27 @@
     "Authorization": `Bearer ${ANON_KEY}`,
     "Content-Type":  "application/json"
   };
-   const pageSize = 1000;  // PostgREST caps each response at 1k
-
-  let allRows = [];
-  let start   = 0;
+  const pageSize = 1000;       // Supabase’s hard cap
+  let offset     = 0;
+  let finished   = false;
 
   function fetchPage() {
-    const end = start + pageSize - 1;
-    fetch(baseUrl, {
-      headers: {
-        ...headers,
-        "Range-Unit": "rows",
-        "Range":       `${start}-${end}`
-      }
-    })
-    .then(res => {
-      // 206 = Partial Content, 200 if total <= pageSize
-      if (!res.ok && res.status !== 206) {
-        throw new Error(`Status ${res.status}`);
-      }
-      const contentRange = res.headers.get("Content-Range") || "";
-      // pull total rows from "0-999/85000"
-      const totalMatch = contentRange.match(/\/(\d+)$/);
-      const total      = totalMatch ? parseInt(totalMatch[1], 10) : null;
+    // enforce deterministic order by your PK (here assumed "ID")
+    const url = `${BASE_URL}/${tbl}?select=*&limit=${pageSize}&offset=${offset}`;
+    fetch(url, { headers })
+      .then(res => {
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        if (data.length === 0) {
+          // no more rows
+          doneCallback();
+          return;
+        }
 
-      return res.json().then(data => ({ data, total }));
-    })
-    .then(({ data, total }) => {
-      allRows = allRows.concat(data);
-
-      // if we know there’s more, fetch the next page
-      if (total !== null && end + 1 < total) {
-        start += pageSize;
-        fetchPage();
-      } else {
-        // done paging — map + append all at once
-        const rows = allRows.map(r => {
+        // append this batch
+        const rows = data.map(r => {
           const out = {};
           for (const col of table.tableInfo.columns) {
             out[col.id] = r[col.id];
@@ -3781,13 +3766,20 @@
           return out;
         });
         table.appendRows(rows);
-        doneCallback();
-      }
-    })
-    .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
+
+        // if we got a full batch, there might be more
+        if (data.length === pageSize) {
+          offset += pageSize;
+          fetchPage();
+        } else {
+          // last page
+          doneCallback();
+        }
+      })
+      .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
   }
 
-  // kick off the first page
+  // start paging
   fetchPage();
 };
     
