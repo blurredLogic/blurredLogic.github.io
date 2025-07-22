@@ -3732,18 +3732,17 @@
 // 2) data
   connector.getData = (table, doneCallback) => {
   const tbl     = tableau.connectionData;
-  const baseUrl = `${BASE_URL}/${tbl}?select=*&limit=100000`;
   const headers = {
     "apikey":        ANON_KEY,
     "Authorization": `Bearer ${ANON_KEY}`,
     "Content-Type":  "application/json"
   };
-  const pageSize = 1000;       // Supabase’s hard cap
+
+  const pageSize = 1000;   // Supabase caps at 1k per call
   let offset     = 0;
-  let finished   = false;
 
   function fetchPage() {
-    // enforce deterministic order by your PK (here assumed "ID")
+    // fetch rows offset…offset+999
     const url = `${BASE_URL}/${tbl}?select=*&limit=${pageSize}&offset=${offset}`;
     fetch(url, { headers })
       .then(res => {
@@ -3752,7 +3751,7 @@
       })
       .then(data => {
         if (data.length === 0) {
-          // no more rows
+          // nothing left
           doneCallback();
           return;
         }
@@ -3767,12 +3766,12 @@
         });
         table.appendRows(rows);
 
-        // if we got a full batch, there might be more
+        // if we got a full page, fetch the next one
         if (data.length === pageSize) {
           offset += pageSize;
           fetchPage();
         } else {
-          // last page
+          // last partial page
           doneCallback();
         }
       })
@@ -3782,6 +3781,7 @@
   // start paging
   fetchPage();
 };
+
     
   // 3) register
   tableau.registerConnector(connector);
