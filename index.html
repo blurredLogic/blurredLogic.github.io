@@ -3738,26 +3738,44 @@
     "Content-Type":  "application/json"
   };
 
-  // Build a URL that always requests up to 100k rows in one shot
-  const url = `${BASE_URL}/${tbl}?select=*&limit=100000`;
+  const pageSize = 1000;            // Supabase will never return more than 1k per call
+  let allRows = [];                 
+  let offset  = 0;
 
-  fetch(url, { headers })
-    .then(res => {
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      const rows = data.map(r => {
-        const out = {};
-        for (const col of table.tableInfo.columns) {
-          out[col.id] = r[col.id];
+  function fetchPage() {
+    // request rows [offset … offset+pageSize)
+    const url = `${BASE_URL}/${tbl}?select=*&limit=${pageSize}&offset=${offset}`;
+    fetch(url, { headers })
+      .then(res => {
+        if (!res.ok) 
+          throw new Error(`Status ${res.status} on table ${tbl}`);
+        return res.json();
+      })
+      .then(data => {
+        allRows = allRows.concat(data);
+
+        if (data.length === pageSize) {
+          // more pages to fetch
+          offset += pageSize;
+          fetchPage();
+        } else {
+          // no more data: map & append everything at once
+          const rows = allRows.map(r => {
+            const out = {};
+            for (const col of table.tableInfo.columns) {
+              out[col.id] = r[col.id];
+            }
+            return out;
+          });
+          table.appendRows(rows);
+          doneCallback();
         }
-        return out;
-      });
-      table.appendRows(rows);
-      doneCallback();
-    })
-    .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
+      })
+      .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
+  }
+
+  // kick off the first page
+  fetchPage();
 };
 
 
