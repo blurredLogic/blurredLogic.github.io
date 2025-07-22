@@ -3738,73 +3738,57 @@
     "Authorization": `Bearer ${ANON_KEY}`,
     "Content-Type":  "application/json"
   };
-  const pageSize = 1000; // Supabase caps at 1k/response
+   const pageSize = 1000;  // PostgREST caps each response at 1k
 
-  // 1) Fetch first page AND grab its Content-Range header
-  fetch(baseUrl, {
-    headers: {
-      ...headers,
-      "Range-Unit": "rows",
-      "Range":       `0-${pageSize-1}`
-    }
-  })
-  .then(res => {
-    if (!res.ok && res.status !== 206) {
-      throw new Error(`Status ${res.status}`);
-    }
-    const contentRange = res.headers.get("Content-Range") || "";
-    return res.json().then(data => ({ data, contentRange }));
-  })
-  // 2) Determine total, then fetch rest in parallel (if needed)
-  .then(({ data: firstPage, contentRange }) => {
-    // parse e.g. "0-999/85000" → 85000
-    const totalMatch = contentRange.match(/\/(\d+)$/);
-    const total      = totalMatch ? parseInt(totalMatch[1], 10) : firstPage.length;
+  let allRows = [];
+  let start   = 0;
 
-    if (total <= pageSize) {
-      // only one page
-      return Promise.resolve(firstPage);
-    }
-
-    // build fetch promises for pages 1…N
-    const pages   = Math.ceil(total / pageSize);
-    const promises = [];
-    for (let i = 1; i < pages; i++) {
-      const start = i * pageSize;
-      const end   = Math.min(start + pageSize - 1, total - 1);
-      promises.push(
-        fetch(baseUrl, {
-          headers: {
-            ...headers,
-            "Range-Unit": "rows",
-            "Range":       `${start}-${end}`
-          }
-        })
-        .then(r => {
-          if (!r.ok && r.status !== 206) {
-            throw new Error(`Status ${r.status} on page ${i}`);
-          }
-          return r.json();
-        })
-      );
-    }
-    // wait for all pages to arrive, then flatten
-    return Promise.all(promises)
-           .then(restPages => [firstPage, ...restPages].flat());
-  })
-  // 3) Map + append everything, then finish
-  .then(allData => {
-    const rows = allData.map(r => {
-      const out = {};
-      for (const col of table.tableInfo.columns) {
-        out[col.id] = r[col.id];
+  function fetchPage() {
+    const end = start + pageSize - 1;
+    fetch(baseUrl, {
+      headers: {
+        ...headers,
+        "Range-Unit": "rows",
+        "Range":       `${start}-${end}`
       }
-      return out;
-    });
-    table.appendRows(rows);
-    doneCallback();
-  })
-  .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
+    })
+    .then(res => {
+      // 206 = Partial Content, 200 if total <= pageSize
+      if (!res.ok && res.status !== 206) {
+        throw new Error(`Status ${res.status}`);
+      }
+      const contentRange = res.headers.get("Content-Range") || "";
+      // pull total rows from "0-999/85000"
+      const totalMatch = contentRange.match(/\/(\d+)$/);
+      const total      = totalMatch ? parseInt(totalMatch[1], 10) : null;
+
+      return res.json().then(data => ({ data, total }));
+    })
+    .then(({ data, total }) => {
+      allRows = allRows.concat(data);
+
+      // if we know there’s more, fetch the next page
+      if (total !== null && end + 1 < total) {
+        start += pageSize;
+        fetchPage();
+      } else {
+        // done paging — map + append all at once
+        const rows = allRows.map(r => {
+          const out = {};
+          for (const col of table.tableInfo.columns) {
+            out[col.id] = r[col.id];
+          }
+          return out;
+        });
+        table.appendRows(rows);
+        doneCallback();
+      }
+    })
+    .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
+  }
+
+  // kick off the first page
+  fetchPage();
 };
     
   // 3) register
