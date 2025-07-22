@@ -3730,65 +3730,71 @@
       schemaCallback([tableSchema]);
     };
 // 2) data
-  connector.getData = (table, doneCallback) => {
-  const tbl     = tableau.connectionData;
-  const headers = {
-    "apikey":        ANON_KEY,
-    "Authorization": `Bearer ${ANON_KEY}`,
-    "Content-Type":  "application/json"
-  };
-
-
-  const pageSize = 1000;  // Supabase max per response
-  let allRows   = [];
-  let start     = 0;
-
-  function fetchPage() {
-    const end        = start + pageSize - 1;
-    const pageHeaders = {
-      ...headers,
-      "Range-Unit": "rows",
-      "Range":       `${start}-${end}`
+   connector.getData = (table, doneCallback) => {
+    const tbl     = tableau.connectionData;
+    const baseUrl = `${BASE_URL}/${tbl}?select=*`;
+    const headers = {
+      "apikey":        ANON_KEY,
+      "Authorization": `Bearer ${ANON_KEY}`,
+      "Content-Type":  "application/json"
     };
+    const pageSize = 1000;  // Supabase caps at 1k per response
 
-    fetch(baseUrl, { headers: pageHeaders })
-      .then(res => {
-        // 206 = Partial Content; 200 = all content if <= pageSize
-        if (!res.ok && res.status !== 206) {
-          throw new Error(`Status ${res.status}`);
+    // Helper to fetch a single page given a start/end row
+    function fetchRange(start, end) {
+      return fetch(baseUrl, {
+        headers: {
+          ...headers,
+          "Range-Unit": "rows",
+          "Range":       `${start}-${end}`
         }
-        // Grab total count from Content-Range: "0-999/85000"
-        const contentRange = res.headers.get("Content-Range") || "";
-        const totalMatch   = contentRange.match(/\/(\d+)$/);
-        const total        = totalMatch ? parseInt(totalMatch[1], 10) : null;
+      })
+      .then(res => {
+        if (!res.ok && res.status !== 206) 
+          throw new Error(`Status ${res.status}`);
+        return res.json();
+      });
+    }
 
-        return res.json().then(data => {
-          allRows = allRows.concat(data);
+    // Kick us off by fetching the first page
+    fetchRange(0, pageSize - 1)
+      .then(firstPage => {
+        // Grab total from the Content-Range header
+        const contentRange = this.lastResponseHeaders.get("Content-Range")
+                              || firstPage.headers.get("Content-Range");
+        const totalMatch   = contentRange && contentRange.match(/\/(\d+)$/);
+        const total        = totalMatch ? +totalMatch[1] : firstPage.length;
 
-          // If we know total and we've not yet fetched everything, fetch next page
-          if (total !== null && end + 1 < total) {
-            start += pageSize;
-            fetchPage();
-          } else {
-            // Done paging: map + append
-            const rows = allRows.map(r => {
-              const out = {};
-              for (const col of table.tableInfo.columns) {
-                out[col.id] = r[col.id];
-              }
-              return out;
-            });
-            table.appendRows(rows);
-            doneCallback();
+        // If there’s nothing beyond the first page, we’re done
+        if (total <= pageSize) {
+          return Promise.resolve(firstPage);
+        }
+
+        // Otherwise fire off the rest of the pages in parallel
+        const pages = Math.ceil(total / pageSize);
+        const promises = [];
+        for (let i = 1; i < pages; i++) {
+          const start = i * pageSize;
+          const end   = Math.min(start + pageSize - 1, total - 1);
+          promises.push(fetchRange(start, end));
+        }
+        return Promise.all(promises)
+          .then(restPages => [ firstPage, ...restPages ].flat());
+      })
+      .then(allData => {
+        // Map + append once
+        const rows = allData.map(r => {
+          const out = {};
+          for (const col of table.tableInfo.columns) {
+            out[col.id] = r[col.id];
           }
+          return out;
         });
+        table.appendRows(rows);
+        doneCallback();
       })
       .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
-  }
-
-  // Kick off paging
-  fetchPage();
-};
+  };
 
   // 3) register
   tableau.registerConnector(connector);
