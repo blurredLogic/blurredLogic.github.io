@@ -3800,14 +3800,6 @@ connector.getData = (table, doneCallback) => {
       schemaCallback([tableSchema]);
     };
   </script>
-    <script>
-  function launch(tbl) {
-    tableau.connectionData = tbl;
-    tableau.connectionName = tbl;
-    tableau.submit();
-  }
-  window.launch = launch;
-</script>
 </head>
 <body>
   <h2>Supabase → Tableau: Extract Any Table Table</h2>
