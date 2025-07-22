@@ -3732,47 +3732,50 @@
     };
 
     // 2) Fetch & map all columns
-    connector.getData = (table, doneCallback) => {
-      const tbl = tableau.connectionData;
-      const url = `${BASE_URL}/${tbl}?select=*`;
+connector.getData = (table, doneCallback) => {
+  const tbl = tableau.connectionData;
+  const headers = {
+    "apikey":        ANON_KEY,
+    "Authorization": `Bearer ${ANON_KEY}`,
+    "Content-Type":  "application/json"
+  };
+  const pageSize = 10000;
+  let allRows = [];
+  let offset = 0;
 
-      fetch(url, {
-        headers: {
-          "apikey":        ANON_KEY,
-          "Authorization": `Bearer ${ANON_KEY}`,
-          "Content-Type":  "application/json"
-        }
-      })
+  function loadPage() {
+    // ask Supabase for rows [offset … offset+pageSize)
+    const url = `${BASE_URL}/${tbl}?select=*&limit=${pageSize}&offset=${offset}`;
+    fetch(url, { headers })
       .then(res => {
         if (!res.ok) throw new Error(`Status ${res.status}`);
         return res.json();
       })
       .then(data => {
-        // map each row into same‐named keys
-        const rows = data.map(r => {
-          // shallow clone only the declared columns
-          const out = {};
-          for (const col of table.tableInfo.columns) {
-            const id = col.id;
-            out[id] = r[id];
-          }
-          return out;
-        });
+        allRows = allRows.concat(data);
 
-        table.appendRows(rows);
-        doneCallback();
+        if (data.length === pageSize) {
+          // still more to fetch
+          offset += pageSize;
+          loadPage();
+        } else {
+          // done paging: map + append
+          const rows = allRows.map(r => {
+            const out = {};
+            for (const col of table.tableInfo.columns) {
+              out[col.id] = r[col.id];
+            }
+            return out;
+          });
+          table.appendRows(rows);
+          doneCallback();
+        }
       })
       .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
-    };
+  }
 
-    tableau.registerConnector(connector);
-
-    // call when a button is clicked
-    function launch(tbl) {
-      tableau.connectionData = tbl;
-      tableau.connectionName = tbl;
-      tableau.submit();
-    }
+  loadPage();
+};
   </script>
 </head>
 <body>
