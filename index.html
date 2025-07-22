@@ -3731,42 +3731,35 @@
     };
 // 2) data
   connector.getData = (table, doneCallback) => {
-    const tbl     = tableau.connectionData;
-    const headers = { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}`, "Content-Type": "application/json" };
-
-    if (tbl === "oecd_data") {
-      // single large‐limit fetch for 85k rows
-      const url = `${BASE_URL}/${tbl}?select=*&limit=100000`;
-      fetch(url, { headers })
-        .then(r => { if (!r.ok) throw new Error(r.status); return r.json() })
-        .then(data => {
-          const rows = data.map(r => {
-            const out = {};
-            for (const col of table.tableInfo.columns) out[col.id] = r[col.id];
-            return out;
-          });
-          table.appendRows(rows);
-          doneCallback();
-        })
-        .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
-    }
-    else {
-      // all other tables: one simple fetch
-      const url = `${BASE_URL}/${tbl}?select=*&limit=100000`;
-      fetch(url, { headers })
-        .then(r => { if (!r.ok) throw new Error(r.status); return r.json() })
-        .then(data => {
-          const rows = data.map(r => {
-            const out = {};
-            for (const col of table.tableInfo.columns) out[col.id] = r[col.id];
-            return out;
-          });
-          table.appendRows(rows);
-          doneCallback();
-        })
-        .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
-    }
+  const tbl     = tableau.connectionData;
+  const headers = {
+    "apikey":        ANON_KEY,
+    "Authorization": `Bearer ${ANON_KEY}`,
+    "Content-Type":  "application/json"
   };
+
+  // Build a URL that always requests up to 100k rows in one shot
+  const url = `${BASE_URL}/${tbl}?select=*&limit=100000`;
+
+  fetch(url, { headers })
+    .then(res => {
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      const rows = data.map(r => {
+        const out = {};
+        for (const col of table.tableInfo.columns) {
+          out[col.id] = r[col.id];
+        }
+        return out;
+      });
+      table.appendRows(rows);
+      doneCallback();
+    })
+    .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
+};
+
 
   // 3) register
   tableau.registerConnector(connector);
