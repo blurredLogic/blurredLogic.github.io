@@ -11,59 +11,82 @@
 
     const connector = tableau.makeConnector();
 
+        // 1) Define schema per table
+    connector.getSchema = schemaCallback => {
+      const tbl = tableau.connectionData;
+      if (!tbl) {
+        tableau.abortWithError("No table selected. Click one of the buttons below.");
+        return;
+      }
+
     // 1) Define schema per table
-    connector.getData = (table, doneCallback) => {
-  const tbl = tableau.connectionData;
-  const headers = {
-    "apikey":        ANON_KEY,
-    "Authorization": `Bearer ${ANON_KEY}`,
-    "Content-Type":  "application/json"
-  };
+connector.getData = (table, doneCallback) => {
+    const tbl = tableau.connectionData;
+    const headers = {
+      "apikey":        ANON_KEY,
+      "Authorization": `Bearer ${ANON_KEY}`,
+      "Content-Type":  "application/json"
+    };
 
-  // Case 1: Big OECD table — just ask Supabase for up to 100k rows in one call
-  if (tbl === "oecd_data") {
-    const url = `${BASE_URL}/${tbl}?select=*&limit=100000`;
-    fetch(url, { headers })
-      .then(res => {
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        const rows = data.map(r => {
-          const out = {};
-          for (const col of table.tableInfo.columns) {
-            out[col.id] = r[col.id];
-          }
-          return out;
-        });
-        table.appendRows(rows);
-        doneCallback();
-      })
-      .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
+    // --- OECD: page through 10k rows at a time ---
+    if (tbl === "oecd_data") {
+      const pageSize = 10000;
+      let offset = 0;
 
-  // Case 2: Every other table — use your simple fetch.  
-  } else {
-    const url = `${BASE_URL}/${tbl}?select=*`;
-    fetch(url, { headers })
-      .then(res => {
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        const rows = data.map(r => {
-          const out = {};
-          for (const col of table.tableInfo.columns) {
-            out[col.id] = r[col.id];
-          }
-          return out;
-        });
-        table.appendRows(rows);
-        doneCallback();
-      })
-      .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
-  }
-};
+      function fetchPage() {
+        const url = `${BASE_URL}/${tbl}?select=*&limit=${pageSize}&offset=${offset}`;
+        fetch(url, { headers })
+          .then(res => {
+            if (!res.ok) throw new Error(`Status ${res.status}`);
+            return res.json();
+          })
+          .then(data => {
+            // append this page
+            const rows = data.map(r => {
+              const out = {};
+              for (const col of table.tableInfo.columns) {
+                out[col.id] = r[col.id];
+              }
+              return out;
+            });
+            table.appendRows(rows);
 
+            if (data.length === pageSize) {
+              // still more
+              offset += pageSize;
+              fetchPage();
+            } else {
+              // done
+              doneCallback();
+            }
+          })
+          .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
+      }
+
+      fetchPage();
+
+    // --- everything else: one‐shot fetch ---
+    } else {
+      const url = `${BASE_URL}/${tbl}?select=*`;
+      fetch(url, { headers })
+        .then(res => {
+          if (!res.ok) throw new Error(`Status ${res.status}`);
+          return res.json();
+        })
+        .then(data => {
+          const rows = data.map(r => {
+            const out = {};
+            for (const col of table.tableInfo.columns) {
+              out[col.id] = r[col.id];
+            }
+            return out;
+          });
+          table.appendRows(rows);
+          doneCallback();
+        })
+        .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
+    }
+  };    
 
       let cols = [], tableSchema;
       switch(tbl) {
@@ -3776,55 +3799,8 @@
       tableSchema = { id: tbl, alias: tbl, columns: cols };
       schemaCallback([tableSchema]);
     };
-
-    // 2) Fetch & map all columns
-connector.getData = (table, doneCallback) => {
-  const tbl = tableau.connectionData;
-  const headers = {
-    "apikey":        ANON_KEY,
-    "Authorization": `Bearer ${ANON_KEY}`,
-    "Content-Type":  "application/json"
-  };
-  const pageSize = 10000;
-  let allRows = [];
-  let offset = 0;
-
-  function loadPage() {
-    // ask Supabase for rows [offset … offset+pageSize)
-    const url = `${BASE_URL}/${tbl}?select=*&limit=${pageSize}&offset=${offset}`;
-    fetch(url, { headers })
-      .then(res => {
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        allRows = allRows.concat(data);
-
-        if (data.length === pageSize) {
-          // still more to fetch
-          offset += pageSize;
-          loadPage();
-        } else {
-          // done paging: map + append
-          const rows = allRows.map(r => {
-            const out = {};
-            for (const col of table.tableInfo.columns) {
-              out[col.id] = r[col.id];
-            }
-            return out;
-          });
-          table.appendRows(rows);
-          doneCallback();
-        }
-      })
-      .catch(err => tableau.abortWithError(`Fetch error: ${err.message}`));
-  }
-
-  loadPage();
-};
   </script>
     <script>
-  // after tableau.registerConnector(connector)
   function launch(tbl) {
     tableau.connectionData = tbl;
     tableau.connectionName = tbl;
