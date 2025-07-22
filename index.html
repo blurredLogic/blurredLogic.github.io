@@ -3732,7 +3732,7 @@
 // 2) data
   connector.getData = (table, doneCallback) => {
   const tbl     = tableau.connectionData;
-  const baseUrl = `${BASE_URL}/${tbl}?select=*`;
+  const baseUrl = `${BASE_URL}/${tbl}?select=*&limit=100000`;
   const headers = {
     "apikey":        ANON_KEY,
     "Authorization": `Bearer ${ANON_KEY}`,
