@@ -78,6 +78,7 @@ connector.getSchema = schemaCallback => {
           cols = [
             { id: "id",           alias: "id",           dataType: tableau.dataTypeEnum.int    },
             { id: "date",         alias: "date",         dataType: tableau.dataTypeEnum.date   },
+            { id: "country_code", alias: "country_code", dataType: tableau.dataTypeEnum.string },
             { id: "country_name", alias: "country_name", dataType: tableau.dataTypeEnum.string },
             { id: "agency",       alias: "agency",       dataType: tableau.dataTypeEnum.string },
             { id: "rating",       alias: "rating",       dataType: tableau.dataTypeEnum.string }
