@@ -15,32 +15,90 @@ connector.getSchema = schemaCallback => {
   let cols = [], tableSchema;
   switch (tbl) {
     case "final_composite_scores":
-      cols = [
-        { id: "id",            alias: "id",            dataType: tableau.dataTypeEnum.int    },
-        { id: "country_name",  alias: "country_name",  dataType: tableau.dataTypeEnum.string },
-        { id: "country_code",  alias: "country_code",  dataType: tableau.dataTypeEnum.string },
-        { id: "scenario",      alias: "scenario",      dataType: tableau.dataTypeEnum.string },
-        { id: "score",         alias: "score",         dataType: tableau.dataTypeEnum.float  }
-      ];
-      break;
+          cols = [
+            { id: "id",            alias: "id",            dataType: tableau.dataTypeEnum.int    },
+            { id: "country_name",  alias: "country_name",  dataType: tableau.dataTypeEnum.string },
+            { id: "country_code",  alias: "country_code",  dataType: tableau.dataTypeEnum.string },
+            { id: "scenario",      alias: "scenario",      dataType: tableau.dataTypeEnum.string },
+            { id: "score",         alias: "score",         dataType: tableau.dataTypeEnum.float  }
+          ];
+          break;
 
-    // … repeat your other cases here exactly as before …
 
-    case "wgi_dashboard_data_yearly":
-      cols = [
-        { id: "id",           alias: "id",            dataType: tableau.dataTypeEnum.int    },
-        { id: "date",         alias: "date",          dataType: tableau.dataTypeEnum.date   },
-        { id: "country_code", alias: "country_code",  dataType: tableau.dataTypeEnum.string },
-        { id: "country_name", alias: "country_name",  dataType: tableau.dataTypeEnum.string },
-        { id: "indicator",    alias: "indicator",     dataType: tableau.dataTypeEnum.string },
-        { id: "value",        alias: "value",         dataType: tableau.dataTypeEnum.float  }
-      ];
-      break;
+        case "country_region_IBAN":
+          cols = [
+            { id: "region_code",         alias: "region_code",          dataType: tableau.dataTypeEnum.int    },
+            { id: "region_name",         alias: "region_name",          dataType: tableau.dataTypeEnum.string },
+            { id: "sub_region_code",     alias: "sub_region_code",      dataType: tableau.dataTypeEnum.int    },
+            { id: "sub_region_name",     alias: "sub_region_name",      dataType: tableau.dataTypeEnum.string },
+            { id: "country",             alias: "country",              dataType: tableau.dataTypeEnum.string },
+            { id: "numeric",             alias: "numeric",              dataType: tableau.dataTypeEnum.int    },
+            { id: "iso_alpha2",          alias: "iso_alpha2",           dataType: tableau.dataTypeEnum.string },
+            { id: "iso_alpha3",          alias: "iso_alpha3",           dataType: tableau.dataTypeEnum.string },
+            { id: "ge_healthcare_region",alias: "ge_healthcare_region", dataType: tableau.dataTypeEnum.string }
+          ];
+          break;
 
-    default:
-      tableau.abortWithError("Unknown table: " + tbl);
-      return;
-  }
+
+        case "OECD_dashboard_data":
+          cols = [
+            { id: "id",            alias: "id",             dataType: tableau.dataTypeEnum.int    },
+            { id: "date",          alias: "date",           dataType: tableau.dataTypeEnum.date   },
+            { id: "country_code",  alias: "country_code",   dataType: tableau.dataTypeEnum.string },
+            { id: "country_name",  alias: "country_name",   dataType: tableau.dataTypeEnum.string },
+            { id: "indicator",     alias: "indicator",      dataType: tableau.dataTypeEnum.string },
+            { id: "value",         alias: "value",          dataType: tableau.dataTypeEnum.float  }
+          ];
+          break;
+
+
+        case "allianz_dashboard_data":
+          cols = [
+            { id: "id",           alias: "id",            dataType: tableau.dataTypeEnum.int    },
+            { id: "date",         alias: "date",          dataType: tableau.dataTypeEnum.date   },
+            { id: "country_code", alias: "country_code",  dataType: tableau.dataTypeEnum.string },
+            { id: "country_name", alias: "country_name",  dataType: tableau.dataTypeEnum.string },
+            { id: "indicator",    alias: "indicator",     dataType: tableau.dataTypeEnum.string },
+            { id: "value",        alias: "value",         dataType: tableau.dataTypeEnum.string }
+          ];
+          break;
+
+        case "imf_dashboard_data":
+          cols = [
+            { id: "id",               alias: "id",                dataType: tableau.dataTypeEnum.int    },
+            { id: "date",             alias: "date",              dataType: tableau.dataTypeEnum.date   },
+            { id: "country_full_name",alias: "country_full_name", dataType: tableau.dataTypeEnum.string },
+            { id: "country_code",     alias: "country_code",      dataType: tableau.dataTypeEnum.string },
+            { id: "indicator",        alias: "indicator",         dataType: tableau.dataTypeEnum.string },
+            { id: "value",            alias: "value",             dataType: tableau.dataTypeEnum.float  }
+          ];
+          break;
+
+        case "sovereign_ratings_dashboard_data":
+          cols = [
+            { id: "id",           alias: "id",           dataType: tableau.dataTypeEnum.int    },
+            { id: "date",         alias: "date",         dataType: tableau.dataTypeEnum.date   },
+            { id: "country_name", alias: "country_name", dataType: tableau.dataTypeEnum.string },
+            { id: "agency",       alias: "agency",       dataType: tableau.dataTypeEnum.string },
+            { id: "rating",       alias: "rating",       dataType: tableau.dataTypeEnum.string }
+          ];
+          break;
+        
+        case "wgi_dashboard_data_yearly":
+          cols = [
+            { id: "id",           alias: "id",            dataType: tableau.dataTypeEnum.int    },
+            { id: "date",         alias: "date",          dataType: tableau.dataTypeEnum.date   },
+            { id: "country_code", alias: "country_code",  dataType: tableau.dataTypeEnum.string },
+            { id: "country_name", alias: "country_name",  dataType: tableau.dataTypeEnum.string },
+            { id: "indicator",    alias: "indicator",     dataType: tableau.dataTypeEnum.string },
+            { id: "value",        alias: "value",         dataType: tableau.dataTypeEnum.float  }
+          ];
+          break;
+          
+        default:
+          tableau.abortWithError("Unknown table: " + tbl);
+          return;
+      }
 
   tableSchema = { id: tbl, alias: tbl, columns: cols };
   schemaCallback([tableSchema]);
