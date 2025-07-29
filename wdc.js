@@ -1,0 +1,169 @@
+    // === CONFIGURE THESE ===
+    const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3bXRicGZreWx4dnl2c2RlcHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NjE0MTQsImV4cCI6MjA2NDUzNzQxNH0.pmpGh4dWJNGZ23BLOQ7fVeyZ-10o9QW2SMuGYBbWrEU";
+    const PROJECT_URL = "https://bwmtbpfkylxvyvsdepvl.supabase.co";
+    const BASE_URL    = ${PROJECT_URL}/rest/v1;
+    const connector = tableau.makeConnector();
+
+        // 1) Define schema per table
+    connector.getSchema = schemaCallback => {
+      const tbl = tableau.connectionData;
+      if (!tbl) {
+        tableau.abortWithError("No table selected. Click one of the buttons below.");
+        return;
+      }
+
+      let cols = [], tableSchema;
+      switch(tbl) {
+        case "final_composite_scores":
+          cols = [
+            { id: "id",            alias: "id",            dataType: tableau.dataTypeEnum.int    },
+            { id: "country_name",  alias: "country_name",  dataType: tableau.dataTypeEnum.string },
+            { id: "country_code",  alias: "country_code",  dataType: tableau.dataTypeEnum.string },
+            { id: "scenario",      alias: "scenario",      dataType: tableau.dataTypeEnum.string },
+            { id: "score",         alias: "score",         dataType: tableau.dataTypeEnum.float  }
+          ];
+          break;
+
+
+        case "country_region_IBAN":
+          cols = [
+            { id: "region_code",         alias: "region_code",          dataType: tableau.dataTypeEnum.int    },
+            { id: "region_name",         alias: "region_name",          dataType: tableau.dataTypeEnum.string },
+            { id: "sub_region_code",     alias: "sub_region_code",      dataType: tableau.dataTypeEnum.int    },
+            { id: "sub_region_name",     alias: "sub_region_name",      dataType: tableau.dataTypeEnum.string },
+            { id: "country",             alias: "country",              dataType: tableau.dataTypeEnum.string },
+            { id: "numeric",             alias: "numeric",              dataType: tableau.dataTypeEnum.int    },
+            { id: "iso_alpha2",          alias: "iso_alpha2",           dataType: tableau.dataTypeEnum.string },
+            { id: "iso_alpha3",          alias: "iso_alpha3",           dataType: tableau.dataTypeEnum.string },
+            { id: "ge_healthcare_region",alias: "ge_healthcare_region", dataType: tableau.dataTypeEnum.string }
+          ];
+          break;
+
+
+        case "OECD_dashboard_data":
+          cols = [
+            { id: "id",            alias: "id",             dataType: tableau.dataTypeEnum.int    },
+            { id: "date",          alias: "date",           dataType: tableau.dataTypeEnum.date   },
+            { id: "country_code",  alias: "country_code",   dataType: tableau.dataTypeEnum.string },
+            { id: "country_name",  alias: "country_name",   dataType: tableau.dataTypeEnum.string },
+            { id: "indicator",     alias: "indicator",      dataType: tableau.dataTypeEnum.string },
+            { id: "value",         alias: "value",          dataType: tableau.dataTypeEnum.float  }
+          ];
+          break;
+
+
+        case "allianz_dashboard_data":
+          cols = [
+            { id: "id",           alias: "id",            dataType: tableau.dataTypeEnum.int    },
+            { id: "date",         alias: "date",          dataType: tableau.dataTypeEnum.date   },
+            { id: "country_code", alias: "country_code",  dataType: tableau.dataTypeEnum.string },
+            { id: "country_name", alias: "country_name",  dataType: tableau.dataTypeEnum.string },
+            { id: "indicator",    alias: "indicator",     dataType: tableau.dataTypeEnum.string },
+            { id: "value",        alias: "value",         dataType: tableau.dataTypeEnum.string }
+          ];
+          break;
+
+        case "imf_dashboard_data":
+          cols = [
+            { id: "id",               alias: "id",                dataType: tableau.dataTypeEnum.int    },
+            { id: "date",             alias: "date",              dataType: tableau.dataTypeEnum.date   },
+            { id: "country_full_name",alias: "country_full_name", dataType: tableau.dataTypeEnum.string },
+            { id: "country_code",     alias: "country_code",      dataType: tableau.dataTypeEnum.string },
+            { id: "indicator",        alias: "indicator",         dataType: tableau.dataTypeEnum.string },
+            { id: "value",            alias: "value",             dataType: tableau.dataTypeEnum.float  }
+          ];
+          break;
+
+        case "sovereign_ratings_dashboard_data":
+          cols = [
+            { id: "id",           alias: "id",           dataType: tableau.dataTypeEnum.int    },
+            { id: "date",         alias: "date",         dataType: tableau.dataTypeEnum.date   },
+            { id: "country_name", alias: "country_name", dataType: tableau.dataTypeEnum.string },
+            { id: "agency",       alias: "agency",       dataType: tableau.dataTypeEnum.string },
+            { id: "rating",       alias: "rating",       dataType: tableau.dataTypeEnum.string }
+          ];
+          break;
+        
+        case "wgi_dashboard_data_yearly":
+          cols = [
+            { id: "id",           alias: "id",            dataType: tableau.dataTypeEnum.int    },
+            { id: "date",         alias: "date",          dataType: tableau.dataTypeEnum.date   },
+            { id: "country_code", alias: "country_code",  dataType: tableau.dataTypeEnum.string },
+            { id: "country_name", alias: "country_name",  dataType: tableau.dataTypeEnum.string },
+            { id: "indicator",    alias: "indicator",     dataType: tableau.dataTypeEnum.string },
+            { id: "value",        alias: "value",         dataType: tableau.dataTypeEnum.float  }
+          ];
+          break;
+          
+        default:
+          tableau.abortWithError("Unknown table: " + tbl);
+          return;
+      }
+
+      tableSchema = { id: tbl, alias: tbl, columns: cols };
+      schemaCallback([tableSchema]);
+    };
+// 2) data
+  connector.getData = (table, doneCallback) => {
+  const tbl     = tableau.connectionData;
+  const headers = {
+    "apikey":        ANON_KEY,
+    "Authorization": Bearer ${ANON_KEY},
+    "Content-Type":  "application/json"
+  };
+
+  const pageSize = 1000;   // Supabase caps at 1k per call
+  let offset     = 0;
+
+  function fetchPage() {
+    // fetch rows offset…offset+999
+    const url = ${BASE_URL}/${tbl}?select=*&limit=${pageSize}&offset=${offset};
+    fetch(url, { headers })
+      .then(res => {
+        if (!res.ok) throw new Error(Status ${res.status});
+        return res.json();
+      })
+      .then(data => {
+        if (data.length === 0) {
+          // nothing left
+          doneCallback();
+          return;
+        }
+
+        // append this batch
+        const rows = data.map(r => {
+          const out = {};
+          for (const col of table.tableInfo.columns) {
+            out[col.id] = r[col.id];
+          }
+          return out;
+        });
+        table.appendRows(rows);
+
+        // if we got a full page, fetch the next one
+        if (data.length === pageSize) {
+          offset += pageSize;
+          fetchPage();
+        } else {
+          // last partial page
+          doneCallback();
+        }
+      })
+      .catch(err => tableau.abortWithError(Fetch error: ${err.message}));
+  }
+
+  // start paging
+  fetchPage();
+};
+
+    
+  // 3) register
+  tableau.registerConnector(connector);
+
+  // 4) expose launch globally
+  function launch(tbl) {
+    tableau.connectionData   = tbl;
+    tableau.connectionName   = tbl;
+    tableau.submit();
+  }
+  window.launch=launch;
