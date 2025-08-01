@@ -63,11 +63,11 @@ connector.getSchema = schemaCallback => {
           ];
           break;
 
-        case "imf_dashboard_data":
+        case "imf_dashboard_data_yearly":
           cols = [
             { id: "id",               alias: "id",                dataType: tableau.dataTypeEnum.int    },
             { id: "date",             alias: "date",              dataType: tableau.dataTypeEnum.date   },
-            { id: "country_full_name",alias: "country_full_name", dataType: tableau.dataTypeEnum.string },
+            { id: "country_name",     alias: "country_name",      dataType: tableau.dataTypeEnum.string },
             { id: "country_code",     alias: "country_code",      dataType: tableau.dataTypeEnum.string },
             { id: "indicator",        alias: "indicator",         dataType: tableau.dataTypeEnum.string },
             { id: "value",            alias: "value",             dataType: tableau.dataTypeEnum.float  }
