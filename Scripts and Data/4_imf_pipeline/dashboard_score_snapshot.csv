@@ -1,0 +1,11 @@
+country,overall_risk_score,risk_score_0_to_100,risk_category
+Islamic Republic of Iran,3.567223995158703,100.0,High Risk
+Sudan,3.001318025571963,89.6,High Risk
+Indonesia,1.6103708005042703,64.2,Medium Risk
+Sri Lanka,1.476976923104707,61.7,Medium Risk
+Pakistan,1.4294117315527017,60.9,Medium Risk
+France,-1.896649484791639,0.0,Low Risk
+Belgium,-1.806344500306535,1.7,Low Risk
+Finland,-1.8038768595584864,1.7,Low Risk
+Norway,-1.7172205477076252,3.3,Low Risk
+Austria,-1.6295497213930024,4.9,Low Risk

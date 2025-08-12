@@ -1,0 +1,41 @@
+country,economic_score,metric,rank_group,governance_score,sovereign_score,trade_payment_score
+Japan,3.6620915444231055,economic_score,top5,,,
+Italy,1.9732600055369915,economic_score,top5,,,
+Greece,1.4143225723774084,economic_score,top5,,,
+United States,1.1890949604682082,economic_score,top5,,,
+France,1.1477400880383013,economic_score,top5,,,
+Turkey,-5.054431862295624,economic_score,bottom5,,,
+Ireland,-1.880281573895275,economic_score,bottom5,,,
+Estonia,-1.8682336384906624,economic_score,bottom5,,,
+Lithuania,-1.1056895428496478,economic_score,bottom5,,,
+Switzerland,-1.011076793775926,economic_score,bottom5,,,
+Syria,,governance_score,top5,2.130113162429216,,
+Somalia,,governance_score,top5,2.11600967487161,,
+Yemen,,governance_score,top5,2.087702786790645,,
+Sudan,,governance_score,top5,1.920097070677373,,
+Libya,,governance_score,top5,1.8562158092147072,,
+Denmark,,governance_score,bottom5,-2.0185007176514094,,
+Switzerland,,governance_score,bottom5,-1.9615104840092077,,
+New Zealand,,governance_score,bottom5,-1.933126443026665,,
+Luxembourg,,governance_score,bottom5,-1.9286447343220807,,
+Finland,,governance_score,bottom5,-1.906246458554591,,
+Ukraine,,sovereign_score,top5,,2.2973294327260176,
+Bolivia,,sovereign_score,top5,,1.821819581780768,
+Sri Lanka,,sovereign_score,top5,,1.7583973826724764,
+Suriname,,sovereign_score,top5,,1.7409367307579893,
+El Salvador,,sovereign_score,top5,,1.736122307489668,
+Netherlands,,sovereign_score,bottom5,,-1.7682579684166275,
+United States,,sovereign_score,bottom5,,-1.7330784646415918,
+Australia,,sovereign_score,bottom5,,-1.7147155255416922,
+Finland,,sovereign_score,bottom5,,-1.5917528861268258,
+New Zealand,,sovereign_score,bottom5,,-1.5674132132915015,
+Afghanistan,,trade_payment_score,top5,,,1.2650439248287415
+Belarus,,trade_payment_score,top5,,,1.2650439248287415
+Bosnia and Herzegovina,,trade_payment_score,top5,,,1.2650439248287415
+Cook Islands,,trade_payment_score,top5,,,1.2650439248287415
+Cambodia,,trade_payment_score,top5,,,1.2650439248287415
+Antarctica,,trade_payment_score,bottom5,,,-1.3542436249191074
+Andorra,,trade_payment_score,bottom5,,,-1.3542436249191074
+Australia,,trade_payment_score,bottom5,,,-1.3542436249191074
+Austria,,trade_payment_score,bottom5,,,-1.3542436249191074
+Belgium,,trade_payment_score,bottom5,,,-1.3542436249191074
