@@ -4,7 +4,7 @@ import os
 
 # configuration
 SUPABASE_URL = "https://bwmtbpfkylxvyvsdepvl.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3bXRicGZreWx4dnl2c2RlcHZsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODk2MTQxNCwiZXhwIjoyMDY0NTM3NDE0fQ.8q_3dYYPsoJVOXWhT-61LXA-RYnET--sPKkUQi9WMe4"
+SUPABASE_KEY = "<password>"
 OUTPUT_DIR = r"C:\Users\cdye\OneDrive\Desktop\GE Heathcare\Data\IMF Data\economic_pillar_pipeline"
 
 # List of IMF table names
