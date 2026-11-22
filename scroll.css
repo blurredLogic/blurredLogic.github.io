@@ -1,0 +1,135 @@
+@media (width > 900px) {
+  .hero h1 {
+    font-size: clamp(3.25rem, 5.15vw, 4.65rem);
+  }
+
+  .hero-lede {
+    margin-bottom: 28px;
+  }
+}
+
+.experience-gear {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin-top: 0.55rem;
+  align-self: flex-start;
+  color: #e9b6c6;
+  font: 2.8rem/1 "Segoe UI Symbol", "DejaVu Sans", sans-serif;
+}
+
+@media (max-width: 650px) {
+  .experience-meta {
+    position: relative;
+  }
+
+  .experience-gear {
+    position: absolute;
+    inset: 0.75rem 1rem auto auto;
+    width: 2.2rem;
+    height: 2.2rem;
+    margin: 0;
+    font-size: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .scroll-active .reading-progress {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 20;
+    height: 3px;
+    pointer-events: none;
+    background: linear-gradient(90deg, #ae9cf5, #f5b0a6);
+    transform: scaleX(var(--reading, 0));
+    transform-origin: left;
+  }
+
+  .scroll-active .art-core {
+    translate: 0 var(--hero-offset, 0px);
+    rotate: var(--hero-turn, 0deg);
+  }
+
+  .scroll-active .orbit-one {
+    rotate: var(--orbit-turn, 0deg);
+  }
+
+  .scroll-active [data-scroll-content] {
+    translate: 0 var(--entry-offset, 0px);
+    opacity: var(--entry-opacity, 1);
+  }
+
+  .scroll-active [data-scroll-content]:focus-within {
+    translate: none;
+    opacity: 1;
+  }
+
+  .scroll-active [data-scroll-detail] {
+    --detail-remaining: calc(1 - var(--detail-progress, 1));
+    opacity: calc(1 - .56 * var(--detail-remaining));
+  }
+
+  .scroll-active [data-scroll-detail="doodle"] {
+    rotate: calc(-92deg * var(--detail-remaining));
+    scale: calc(1 - .35 * var(--detail-remaining));
+    width: max-content;
+  }
+
+  .scroll-active [data-scroll-detail="fact"] {
+    translate: 0 calc(25px * var(--detail-remaining));
+    scale: calc(1 - .08 * var(--detail-remaining));
+    transform-origin: left center;
+  }
+
+  .scroll-active [data-scroll-detail="impact"] {
+    translate: calc(-19px * var(--detail-remaining)) 0;
+  }
+
+  .scroll-active [data-scroll-detail="gear"] {
+    opacity: 1;
+    rotate: calc(225deg * var(--detail-progress, 0));
+  }
+
+  .scroll-active [data-scroll-detail="tool"] {
+    position: relative;
+    translate: calc(19px * var(--detail-remaining)) 0;
+  }
+
+  .scroll-active [data-scroll-detail="tool"]::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -1px;
+    height: 1px;
+    background: linear-gradient(90deg, #cbb7ed, transparent);
+    transform: scaleX(var(--detail-progress, 1));
+    transform-origin: left;
+    pointer-events: none;
+  }
+
+  .scroll-active [data-scroll-section] {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .scroll-active [data-scroll-section]::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #cdb7ed, transparent);
+    transform: scaleX(var(--section-progress, 0));
+    pointer-events: none;
+  }
+
+  @media (hover: hover) {
+    .project-card {
+      transition: transform .22s ease, border-color .22s ease;
+    }
+
+    .project-card:hover {
+      transform: translateY(-5px);
+      border-color: #a291c9;
+    }
+  }
+}

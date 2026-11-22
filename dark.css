@@ -1,0 +1,61 @@
+:root{color:#eef1fb;background:#12182a;color-scheme:dark}
+body{background:#12182a}
+.skip-link{background:#eef1fb;color:#12182a}
+.site-header{color:#f4f1ff}
+.brand-mark{border-color:#9a91c5;background:#292b49}
+.nav-cta{border-color:#7f789d}
+.hero{background:radial-gradient(circle at 74% 30%,#27304d 0,#151b30 45%,#0d1426 100%)}
+.hero:after{background:radial-gradient(circle,#664d7b 0,transparent 70%);opacity:.23}
+.hero h1 em,.toolkit-section h2 em{color:#eaa6a8}
+.hero-lede{color:#c4c9de}
+.button-light{background:#d7c9f4;color:#171a2c}
+.button-light:hover{background:#ebdefd}
+.hero-location,.hero-bottom{color:#aeb7d1}
+.hero-bottom{border-color:#4a506b}
+.art-core{background:#a99ac8;color:#15182b;box-shadow:20px 27px 0 rgba(128,115,187,.12)}
+.core-star{color:#f0ad9e}
+.art-card{background:#e2dcf3;color:#15192a;box-shadow:0 15px 40px rgba(0,0,0,.35)}
+.orbit{border-color:rgba(197,192,228,.3)}
+.section-kicker{color:#b7a5eb}
+.intro{background:#151b2e}
+.intro h2 span,.section-heading h2 em,.education-section h2 em{color:#b7a5eb}
+.intro p:not(.section-kicker),.section-heading>p,.experience-body>p,.project-content>p:not(.project-type),.education-list p{color:#b8c1d5}
+.intro .large-copy{color:#eef1fb!important}
+.doodle{color:#54486d}
+.mini-facts,.education-list,.education-list>div{border-color:#39425a}
+.mini-facts span{color:#aab5ce}
+.work-section{background:#1a2034}
+.experience-card,.project-card{background:#252b40;border:1px solid #3b435c;box-shadow:0 18px 45px rgba(0,0,0,.11)}
+.experience-meta{background:#484063;color:#ede7f7}
+.role-tag{background:#d7c9f4;color:#27223d}
+.company,.education-list span,.project-type{color:#c5b3f1}
+.impact-list,.impact-list li{border-color:#414a62}
+.impact-list li{color:#d7dceb}
+.impact-list li span{color:#a9a0ce}
+.chip-row span{background:#353c55;color:#d6d0ed}
+.projects-section{background:#151b2e}
+.project-purple .project-art{background:#655778}
+.project-blue .project-art{background:#425e78}
+.project-coral .project-art{background:#805963}
+.project-symbol{color:#d6bcef}
+.project-blue .project-symbol{color:#b6d5f0}
+.project-coral .project-symbol{color:#f3b5ab}
+.art-label{color:#f3eefc}
+.signal-line{border-color:rgba(235,214,255,.4)}
+.brain-wave{border-color:rgba(198,230,255,.42)}
+.ticket-outline{border-color:rgba(255,207,196,.4)}
+.toolkit-section{background:#0e1527}
+.toolkit-section p:not(.section-kicker){color:#b9c1d7}
+.toolkit-list>div{border-color:#3c455e}
+.education-section{background:#171d30}
+.contact-section{background:#302b48}
+.contact-section .section-kicker{color:#c8b7f2}
+.contact-section h2 em{color:#d5b8f3}
+.contact-section p:not(.section-kicker),.contact-address{color:#d8d3e8}
+.button-dark{background:#d7c9f4;color:#171a2c}
+.button-dark:hover{background:#e8ddfa}
+.site-footer{background:#0b1120;color:#c6cde1}
+.site-footer a:hover,.site-header nav a:hover,.text-link:hover{color:#eaa6a8}
+
+.section,.contact-section{position:relative;isolation:isolate}
+@media(max-width:650px){.brand{font-size:1rem;gap:8px}.nav-cta{font-size:.8rem;padding:8px 12px}}
